@@ -117,41 +117,47 @@ def bfs(grafo, inicio, destino):
     return None
 
 
+import random
+
 def dfs(grafo, inicio, destino):
     """
-    Busca em Profundidade - encontra UM caminho (não necessariamente o mais curto)
-    Retorna: lista de IDs do caminho ou None
+    Busca em profundidade que PARA assim que encontra o destino.
+    Retorna uma lista com o caminho da origem → destino.
     """
-    if inicio == destino:
-        return [inicio]
-    
+
     pilha = [inicio]
-    visitados = set()
     pais = {inicio: None}
-    
+    visitados = set()
+
     while pilha:
         atual = pilha.pop()
-        
-        if atual not in visitados:
-            visitados.add(atual)
-            
-            if atual == destino:
-                # Reconstruir caminho
-                caminho = []
-                while atual is not None:
-                    caminho.insert(0, atual)
-                    atual = pais[atual]
-                return caminho
-            
-            # Adiciona vizinhos na pilha (ordem reversa para visitação mais natural)
-            vizinhos = grafo.obter_vizinhos(atual)
-            random.shuffle(vizinhos)  # Aleatoriedade para comportamento menos previsível
-            for vizinho in vizinhos:
-                if vizinho not in visitados:
-                    pais[vizinho] = atual
-                    pilha.append(vizinho)
-    
+
+        if atual in visitados:
+            continue
+
+        visitados.add(atual)
+
+        # Achou o destino → reconstrói caminho
+        if atual == destino:
+            caminho = []
+            while atual is not None:
+                caminho.append(atual)
+                atual = pais[atual]
+            caminho.reverse()
+            return caminho
+
+        # Explorar vizinhos em ordem aleatória
+        vizinhos = grafo.obter_vizinhos(atual)
+        random.shuffle(vizinhos)
+
+        for v in vizinhos:
+            if v not in visitados and v not in pais:
+                pais[v] = atual
+                pilha.append(v)
+
+    # Não encontrou
     return None
+
 
 
 # ==================== ENTIDADES ====================
@@ -200,12 +206,16 @@ class Inimigo:
             self.caminho = dfs(grafo, self.sala_atual, jogador.sala_atual)
             if self.caminho and len(self.caminho) > 1:
                 self.caminho.pop(0)  # Remove posição atual
+                print("Inimigo:", self.sala_atual, "Jogador:", jogador.sala_atual, "Caminho:", self.caminho)
             self.tempo_recalculo = 0
         
+
         # Mover para próxima sala do caminho
-        if self.tempo_movimento >= tempo_por_sala and len(self.caminho) > 1:
+        if self.tempo_movimento >= tempo_por_sala and self.caminho:
             self.sala_atual = self.caminho.pop(0)
             self.tempo_movimento = 0
+
+        
         
 
 
